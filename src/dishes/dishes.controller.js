@@ -61,7 +61,7 @@ function hasImageUrl(req, res, next) {
 function create(req, res) {
   const { data: { name, description, price, image_url } = {} } = req.body;
   const newDish = {
-    id: nextId,
+    id: nextId(),
     name,
     description,
     price,
@@ -76,7 +76,7 @@ function list(req, res) {
 }
 
 function dishExists(req, res, next) {
-  const dishId = Number(req.params.dishId);
+  const dishId = req.params.dishId;
   const foundDish = dishes.find((dish) => dish.id === dishId);
   if (foundDish) {
     return next();
@@ -88,17 +88,16 @@ function dishExists(req, res, next) {
 }
 
 function read(req, res) {
-  const dishId = Number(req.params.dishId);
+  const dishId = req.params.dishId;
   const foundDish = dishes.find((dish) => dish.id === dishId);
   res.json({ data: foundDish });
 }
 
 function dishIdMatchesRouteId(req, res, next) {
-  const dishId = Number(req.params.dishId);
-  const foundDish = dishes.find((dish) => dish.id === dishId);
+  const dishId = req.params.dishId;
 
   const { data: { id, name, description, image_url, price } = {} } = req.body;
-  if (foundDish.id && foundDish.id !== dishId) {
+  if (id && id !== dishId) {
     return next({
       status: 400,
       message: `Dish id does not match route id. Dish: ${id}, Route: ${dishId}`,
@@ -108,7 +107,7 @@ function dishIdMatchesRouteId(req, res, next) {
 }
 
 function update(req, res) {
-  const dishId = Number(req.params.dishId);
+  const dishId = req.params.dishId;
   const foundDish = dishes.find((dish) => dish.id === dishId);
 
   const { data: { id, name, description, image_url, price } = {} } = req.body;
