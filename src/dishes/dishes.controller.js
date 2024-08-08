@@ -79,6 +79,7 @@ function dishExists(req, res, next) {
   const dishId = req.params.dishId;
   const foundDish = dishes.find((dish) => dish.id === dishId);
   if (foundDish) {
+    res.locals.dish = foundDish;
     return next();
   }
   next({
@@ -88,9 +89,7 @@ function dishExists(req, res, next) {
 }
 
 function read(req, res) {
-  const dishId = req.params.dishId;
-  const foundDish = dishes.find((dish) => dish.id === dishId);
-  res.json({ data: foundDish });
+  res.json({ data: res.locals.dish });
 }
 
 function dishIdMatchesRouteId(req, res, next) {
@@ -107,17 +106,14 @@ function dishIdMatchesRouteId(req, res, next) {
 }
 
 function update(req, res) {
-  const dishId = req.params.dishId;
-  const foundDish = dishes.find((dish) => dish.id === dishId);
-
   const { data: { id, name, description, image_url, price } = {} } = req.body;
 
-  foundDish.name = name;
-  foundDish.description = description;
-  foundDish.image_url = image_url;
-  foundDish.price = price;
+  res.locals.dish.name = name;
+  res.locals.dish.description = description;
+  res.locals.dish.image_url = image_url;
+  res.locals.dish.price = price;
 
-  res.json({ data: foundDish });
+  res.json({ data: res.locals.dish });
 }
 
 module.exports = {

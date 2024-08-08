@@ -96,6 +96,7 @@ function orderExists(req, res, next) {
   const orderId = req.params.orderId;
   const foundOrder = orders.find((order) => order.id === orderId);
   if (foundOrder) {
+    res.locals.order = foundOrder;
     return next();
   }
   next({
@@ -105,10 +106,7 @@ function orderExists(req, res, next) {
 }
 
 function read(req, res) {
-  const orderId = req.params.orderId;
-  const foundOrder = orders.find((order) => order.id === orderId);
-
-  res.json({ data: foundOrder });
+  res.json({ data: res.locals.order });
 }
 
 function orderIdMatchesRouteId(req, res, next) {
@@ -127,7 +125,12 @@ function orderIdMatchesRouteId(req, res, next) {
 
 function hasStatus(req, res, next) {
   const { data: { status } = {} } = req.body;
-  const validStatuses = ['pending', 'preparing', 'out-for-delivery', 'delivered'];
+  const validStatuses = [
+    "pending",
+    "preparing",
+    "out-for-delivery",
+    "delivered",
+  ];
   if (status && validStatuses.indexOf(status) >= 0) {
     return next();
   }
@@ -150,25 +153,19 @@ function orderIsNotDelivered(req, res, next) {
 }
 
 function update(req, res) {
-  const orderId = req.params.orderId;
-  const foundOrder = orders.find((order) => order.id === orderId);
-
   const { data: { id, deliverTo, mobileNumber, status, dishes } = {} } =
     req.body;
 
-  foundOrder.deliverTo = deliverTo;
-  foundOrder.mobileNumber = mobileNumber;
-  foundOrder.status = status;
-  foundOrder.dishes = dishes;
+  res.locals.order.deliverTo = deliverTo;
+  res.locals.order.mobileNumber = mobileNumber;
+  res.locals.order.status = status;
+  res.locals.order.dishes = dishes;
 
-  res.json({ data: foundOrder });
+  res.json({ data: res.locals.order });
 }
 
 function orderIsPending(req, res, next) {
-  const { orderId } = req.params;
-  const foundOrder = orders.find((order) => order.id === orderId);
-
-  if (foundOrder && foundOrder.status === "pending") {
+  if (res.locals.order && res.locals.order.status === "pending") {
     return next();
   }
   next({
