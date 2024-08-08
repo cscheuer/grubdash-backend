@@ -2,7 +2,6 @@ const path = require("path");
 
 // Use the existing order data
 const orders = require(path.resolve("src/data/orders-data"));
-const dishes = require(path.resolve("src/data/dishes-data"));
 
 // Use this function to assigh ID's when necessary
 const nextId = require("../utils/nextId");
@@ -25,7 +24,7 @@ function hasMobileNumber(req, res, next) {
   }
   next({
     status: 400,
-    message: "Order must include a mobile number",
+    message: "Order must include a mobileNumber",
   });
 }
 
@@ -36,6 +35,7 @@ function hasDishes(req, res, next) {
       status: 400,
       message: "Order must include a dish",
     });
+    x;
   } else if (
     (Array.isArray(dishes) && dishes.length <= 0) ||
     !Array.isArray(dishes)
@@ -57,10 +57,15 @@ function hasQuantity(req, res, next) {
     Number.isInteger(dish.quantity)
   );
 
-  console.log(allQuantitiesAreNumbers);
-  console.log(allQuantitiesAreGreaterThanZero);
   if (allQuantitiesAreNumbers && allQuantitiesAreGreaterThanZero) {
     return next();
+  } else if (!allQuantitiesAreNumbers) {
+    return next({
+      status: 400,
+      message: `dish ${dishes.findIndex(
+        (dish) => !Number.isInteger(dish.quantity)
+      )} must have a quantity that is an integer greater than 0`,
+    });
   }
   next({
     status: 400,
@@ -72,7 +77,6 @@ function hasQuantity(req, res, next) {
 
 function create(req, res) {
   const { data: { deliverTo, mobileNumber, status, dishes } = {} } = req.body;
-  console.log(dishes);
   const newOrder = {
     id: nextId(),
     deliverTo,
@@ -123,7 +127,8 @@ function orderIdMatchesRouteId(req, res, next) {
 
 function hasStatus(req, res, next) {
   const { data: { status } = {} } = req.body;
-  if (status && status !== "") {
+  const validStatuses = ['pending', 'preparing', 'out-for-delivery', 'delivered'];
+  if (status && validStatuses.indexOf(status) >= 0) {
     return next();
   }
   next({
@@ -160,8 +165,10 @@ function update(req, res) {
 }
 
 function orderIsPending(req, res, next) {
-  const { data: { status } = {} } = req.body;
-  if (status === "pending") {
+  const { orderId } = req.params;
+  const foundOrder = orders.find((order) => order.id === orderId);
+
+  if (foundOrder && foundOrder.status === "pending") {
     return next();
   }
   next({
